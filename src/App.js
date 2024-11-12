@@ -379,9 +379,15 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import contractABI from "./contractABI.json";
+import { ethers } from "ethers";
+const contractAddress = "0xac0ee857926b09cd08158540915e06d1dbc73999";
 
 export default function App() {
   const [walletAddress, setWalletAddress] = useState("");
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [contract, setContract] = useState(null);
   const [serviceDetails, setServiceDetails] = useState("");
   const [parts, setParts] = useState(["", "", "", "", ""]);
   const [recordId, setRecordId] = useState("");
@@ -403,77 +409,148 @@ export default function App() {
     "w-full py-2 px-4 rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]";
   // Simulated wallet connection
   const connectWallet = async () => {
-    setLoading(true);
     try {
-      // Simulate wallet connection with a random address
-      const mockAddress =
-        "0x" +
-        Array(40)
-          .fill(0)
-          .map(() => Math.floor(Math.random() * 16).toString(16))
-          .join("");
-      setWalletAddress(mockAddress);
+      setLoading(true);
+      if (window.ethereum) {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const newProvider = new ethers.providers.Web3Provider(window.ethereum);
+        const newSigner = newProvider.getSigner();
+        const address = await newSigner.getAddress();
+        setWalletAddress(address);
+        setProvider(newProvider);
+        setSigner(newSigner);
+        const newContract = new ethers.Contract(
+          contractAddress,
+          contractABI,
+          newSigner
+        );
+        setContract(newContract);
+        setLoading(false);
+      } else {
+        alert("MetaMask is required.");
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Error connecting wallet:", error);
-    } finally {
       setLoading(false);
     }
   };
 
-  const simulateTransaction = async () => {
-    setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setLoading(false);
-    return true;
-  };
-
   const initiateService = async () => {
-    if (!serviceDetails || !parts.some((part) => part)) return;
-    const success = await simulateTransaction();
-    if (success) {
-      setServiceDetails("");
-      setParts(["", "", "", "", ""]);
+    if (!serviceDetails || !parts) return;
+    setLoading(true);
+    try {
+      const tx = await contract.initiateService(
+        walletAddress,
+        serviceDetails,
+        parts
+      );
+      await tx.wait();
+      alert("Service initiated successfully!");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error initiating service:", error);
+      setLoading(false);
     }
-    return success;
   };
 
   const registerServiceCenter = async () => {
-    if (!serviceCenterAddress || !serviceCenterAddress.startsWith("0x")) {
-      throw new Error("Please enter a valid address.");
+    if (
+      !serviceCenterAddress ||
+      !ethers.utils.isAddress(serviceCenterAddress)
+    ) {
+      alert("Please enter a valid Ethereum address.");
+      return;
     }
-    const success = await simulateTransaction();
-    if (success) {
-      setServiceCenterAddress("");
+    setLoading(true);
+    try {
+      const tx = await contract.registerServiceCenter(serviceCenterAddress);
+      await tx.wait();
+      alert("Service Center Registered!");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error registering service center:", error);
+      setLoading(false);
     }
-    return success;
   };
 
   const verifyRecord = async () => {
     if (!recordId || !signature) return;
-    const success = await simulateTransaction();
-    if (success) {
-      setVerificationStatus((prev) => ({ ...prev, brandVerified: true }));
+    setLoading(true);
+    try {
+      const tx = await contract.verifyByBrand(recordId, signature);
+      await tx.wait();
+      alert("Record verified by brand!");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error verifying record by brand:", error);
+      setLoading(false);
     }
-    return success;
   };
 
   const verifyParts = async () => {
     if (!recordId || !signature) return;
-    const success = await simulateTransaction();
-    if (success) {
-      setVerificationStatus((prev) => ({ ...prev, partsVerified: true }));
+    setLoading(true);
+    try {
+      // Call the function directly if it doesn't send a transaction
+      const result = await contract.verifyPartsAuthenticity(
+        recordId,
+        signature
+      );
+
+      // Process the result (assuming result indicates success or failure)
+      if (result) {
+        alert("Parts verified for authenticity!");
+      } else {
+        alert("Verification failed or returned unexpected result.");
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error verifying parts authenticity:", error);
+      setLoading(false);
     }
-    return success;
   };
 
   const verifyByUser = async () => {
     if (!recordId || !signature) return;
-    const success = await simulateTransaction();
-    if (success) {
-      setVerificationStatus((prev) => ({ ...prev, userVerified: true }));
+    setLoading(true);
+    try {
+      const tx = await contract.verifyByUser(recordId, signature);
+      await tx.wait();
+      alert("Record verified by user!");
+      setLoading(false);
+    } catch (error) {
+      console.error("Error verifying record by user:", error);
+      setLoading(false);
     }
-    return success;
   };
+
+  const getRecord = async () => {
+    if (!recordId || !contract) return;
+    const record = await contract.records(recordId);
+    console.log("Record Data: ", record);
+  };
+
+  const getUnverifiedRecords = async () => {
+    setLoading(true);
+    try {
+      const unverifiedRecords = await contract.getUnverifiedRecords();
+      setUnverifiedRecords(unverifiedRecords);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching unverified records:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (window.ethereum && !walletAddress) {
+      connectWallet();
+    }
+  }, [walletAddress]);
 
   const progressPercentage =
     Object.values(verificationStatus).filter(Boolean).length * (100 / 3);
@@ -528,7 +605,7 @@ export default function App() {
       )}
 
       <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section className="col-span-full">
+        {/* <section className="col-span-full">
           <Card className={glassmorphicCard}>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -552,7 +629,7 @@ export default function App() {
                   }`}
                 >
                   <CheckCircle className="h-5 w-5" />
-                  <span>Brand Verified</span>
+                  <span className="text-gray-300">Brand Verified</span>
                 </div>
                 <div
                   className={`flex items-center space-x-2 ${
@@ -562,7 +639,7 @@ export default function App() {
                   }`}
                 >
                   <CheckCircle className="h-5 w-5" />
-                  <span>Parts Verified</span>
+                  <span className="text-gray-300">Parts Verified</span>
                 </div>
                 <div
                   className={`flex items-center space-x-2 ${
@@ -572,12 +649,12 @@ export default function App() {
                   }`}
                 >
                   <CheckCircle className="h-5 w-5" />
-                  <span>User Verified</span>
+                  <span className="text-gray-300">User Verified</span>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </section>
+        </section> */}
 
         <section>
           <Card className={glassmorphicCard}>
@@ -588,7 +665,7 @@ export default function App() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 text-gray-700">
                 <input
                   type="text"
                   value={serviceCenterAddress}
@@ -617,7 +694,7 @@ export default function App() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-4 text-gray-700">
                 <input
                   type="text"
                   value={serviceDetails}
@@ -660,21 +737,21 @@ export default function App() {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-4">
+                <div className="space-y-4 ">
                   <h3 className="font-semibold">Brand Verification</h3>
                   <input
                     type="number"
                     value={recordId}
                     onChange={(e) => setRecordId(e.target.value)}
                     placeholder="Record ID"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className=" text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <input
                     type="text"
                     value={signature}
                     onChange={(e) => setSignature(e.target.value)}
                     placeholder="Signature"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <button
                     className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors"
@@ -692,14 +769,14 @@ export default function App() {
                     value={recordId}
                     onChange={(e) => setRecordId(e.target.value)}
                     placeholder="Record ID"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <input
                     type="text"
                     value={signature}
                     onChange={(e) => setSignature(e.target.value)}
                     placeholder="Signature"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <button
                     className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
@@ -717,14 +794,14 @@ export default function App() {
                     value={recordId}
                     onChange={(e) => setRecordId(e.target.value)}
                     placeholder="Record ID"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <input
                     type="text"
                     value={signature}
                     onChange={(e) => setSignature(e.target.value)}
                     placeholder="Signature"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <button
                     className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
