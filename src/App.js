@@ -33,7 +33,7 @@ export default function App() {
   });
 
   const glassmorphicCard =
-    "bg-opacity-10 backdrop-blur-lg bg-white/10 border border-white/20 rounded-3xl shadow-xl";
+    "bg-opacity-10 backdrop-blur-lg bg-white/10 border border-white/20 rounded-xl shadow-xl";
   const inputStyle =
     "w-full px-4 py-2 bg-white/5 border border-white/10 rounded-2xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none text-white placeholder-gray-400";
   const buttonStyle =
@@ -206,7 +206,7 @@ export default function App() {
               </h1>
             </div>
             {walletAddress ? (
-              <div className="flex items-center space-x-2 bg-white/10 rounded-lg px-4 py-2">
+              <div className="flex items-center space-x-2 bg-white/10 rounded-xl px-4 py-2">
                 <UserCircle size={20} />
                 <span className="font-medium">{`${walletAddress.slice(
                   0,
@@ -215,7 +215,7 @@ export default function App() {
               </div>
             ) : (
               <button
-                className="bg-white text-blue-600 py-2 px-6 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+                className="bg-white text-blue-600 py-2 px-6 rounded-xl font-medium hover:bg-blue-50 transition-colors"
                 onClick={connectWallet}
                 disabled={loading}
               >
@@ -247,7 +247,7 @@ export default function App() {
           <CardContent>
             <div className="space-y-4 text-green-300 text-lg">
               <button
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-xl hover:bg-blue-700 transition-colors"
                 onClick={getUnverifiedRecords}
               >
                 Get Unverified Records
@@ -255,13 +255,16 @@ export default function App() {
               {unverifiedRecords.length > 0 ? (
                 <ul className="space-y-2">
                   {unverifiedRecords.map((recordId, index) => (
-                    <li key={index} className="text-center">
+                    <li
+                      key={index}
+                      className="text-center text-3xl font-bold text-white"
+                    >
                       <span>Record ID: {recordId.toString()}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-center text-lg text-blue-400">
+                <p className="text-center text-3xl text-green-400 font-bold">
                   No unverified records found.
                 </p>
               )}
@@ -278,16 +281,16 @@ export default function App() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 text-gray-700">
+              <div className="space-y-4 text-gray-700 ">
                 <input
                   type="text"
                   value={serviceCenterAddress}
                   onChange={(e) => setServiceCenterAddress(e.target.value)}
                   placeholder="Service Center Address (0x...)"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-4 py-2 border focus:ring-2 rounded-xl focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
                 <button
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-xl hover:bg-blue-700 transition-colors"
                   onClick={registerServiceCenter}
                   disabled={loading}
                 >
@@ -313,7 +316,7 @@ export default function App() {
                   value={serviceDetails}
                   onChange={(e) => setServiceDetails(e.target.value)}
                   placeholder="Service Details"
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
                 <div className="space-y-2">
                   {parts.map((part, index) => (
@@ -327,12 +330,12 @@ export default function App() {
                         setParts(newParts);
                       }}
                       placeholder={`Part ${index + 1}`}
-                      className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     />
                   ))}
                 </div>
                 <button
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-xl hover:bg-blue-700 transition-colors"
                   onClick={initiateService}
                   disabled={loading}
                 >
@@ -359,17 +362,17 @@ export default function App() {
                   value={recordId}
                   onChange={(e) => setRecordId(e.target.value)}
                   placeholder="Record ID"
-                  className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="text-gray-700 w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
                 <input
                   type="text"
                   value={signature}
                   onChange={(e) => setSignature(e.target.value)}
                   placeholder="Part ID"
-                  className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  className="text-gray-700 w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />
                 <button
-                  className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+                  className="w-full bg-green-500 text-white py-2 px-4 rounded-xl hover:bg-green-600 transition-colors"
                   onClick={verifyParts}
                   disabled={loading}
                 >
@@ -394,17 +397,17 @@ export default function App() {
                     value={recordId}
                     onChange={(e) => setRecordId(e.target.value)}
                     placeholder="Record ID"
-                    className=" text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className=" text-gray-700 w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <input
                     type="text"
                     value={signature}
                     onChange={(e) => setSignature(e.target.value)}
                     placeholder="Signature"
-                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <button
-                    className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors"
+                    className="w-full bg-yellow-500 text-white py-2 px-4 rounded-xl hover:bg-yellow-600 transition-colors"
                     onClick={verifyRecord}
                     disabled={loading}
                   >
@@ -419,17 +422,17 @@ export default function App() {
                     value={recordId}
                     onChange={(e) => setRecordId(e.target.value)}
                     placeholder="Record ID"
-                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <input
                     type="text"
                     value={signature}
                     onChange={(e) => setSignature(e.target.value)}
                     placeholder="Signature"
-                    className="text-gray-700 w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    className="text-gray-700 w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                   <button
-                    className="w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                    className="w-full bg-red-500 text-white py-2 px-4 rounded-xl hover:bg-red-600 transition-colors"
                     onClick={verifyByUser}
                     disabled={loading}
                   >
